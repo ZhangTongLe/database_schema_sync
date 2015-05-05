@@ -1,0 +1,16 @@
+{
+  "source": {
+    "ip": "",
+    "port": "",
+    "userName": "",
+    "password": "",
+    "database": ""
+  },
+  "targer": {
+    "ip": "",
+    "port": "",
+    "userName": "",
+    "password": "",
+    "database": ""
+  }
+}
