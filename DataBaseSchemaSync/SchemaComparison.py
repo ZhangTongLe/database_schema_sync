@@ -6,6 +6,8 @@
 import sys
 from DataBaseSchemaSync.entity.Field import Field
 from DataBaseSchemaSync.entity.Diff import Diff
+from DataBaseSchemaSync.entity.Field_Diff import FieldDiff
+from DataBaseSchemaSync.entity.TableDiff import TableDiff
 
 
 class SchemaComparison(object):
@@ -29,7 +31,7 @@ class SchemaComparison(object):
                     tbd[i]
                 except KeyError as k:
                     sys.stderr.write('table : (%s) does not find in the target database' % k.message)
-                    diffs.append(Diff(None, None, diff_type=Diff.TYPE_TABLE, value=k.message))
+                    diffs.append(TableDiff(sbd[k.message]), None, Diff.TYPE_LACK)
                     continue
 
                 sfd = self.__field_to_dict(sbd[i].get_fields())  # 字段
@@ -40,12 +42,12 @@ class SchemaComparison(object):
                         tfd[j]
                     except KeyError as k:
                         sys.stderr.write('field : (%s) does not find in the table (%s)' % (k.message, i))
-                        diffs.append(Diff(sfd[j], tfd[j], diff_type=Diff.TYPE_FIELD_NONE, value=k.message))
+                        diffs.append(FieldDiff(sfd[j], tfd[j], Diff.TYPE_LACK))
                         pass
 
                     rs = self.__field_compare(sfd[j], tfd[j])
                     if rs != Diff.NONE:
-                        diffs.append(Diff(sfd[j], tfd[j], value=rs))
+                        diffs.append(FieldDiff(sfd[j], tfd[j], Diff.TYPE_DIFF, where=rs))
             return diffs
 
         if len(sb) > len(tb):
@@ -96,10 +98,10 @@ class SchemaComparison(object):
 
     def sync(self, diffs):
         for i in diffs:
-            if i.diff_type == Diff.TYPE_TABLE:
-                self.__sync_table(i)
-            else:
+            if type(i) == 'Field_Diff':
                 self.__sync_field(i)
+            else:
+                self.__sync_table(i)
 
     def __sync_table(self, diff):
         rs = self.source.query_create_table_statement(diff.where)
@@ -114,20 +116,26 @@ class SchemaComparison(object):
         if diff.where & Diff.COLLATION == Diff.COLLATION:
             pass
 
+        # 字段类型
         if diff.where & Diff.TYPE == Diff.TYPE:
             pass
 
+        # 是否可以为空
         if diff.where & Diff.NULL == Diff.NULL:
             pass
 
+        # 是否为主键
         if diff.where & Diff.KEY == Diff.KEY:
             pass
 
+        # 默认值
         if diff.where & Diff.DEFAULT == Diff.DEFAULT:
             pass
 
+        # 额外字段如：ONUPDATE
         if diff.where & Diff.EXTRA == Diff.EXTRA:
             pass
 
+        # 备注
         if diff.where & Diff.COMMENT == Diff.COMMENT:
             pass

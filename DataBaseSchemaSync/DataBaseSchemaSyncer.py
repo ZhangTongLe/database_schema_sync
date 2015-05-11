@@ -9,12 +9,13 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from DataBaseSchemaSync.db.MysqlDataBaseConnector import MysqlDataBaseConnector
 import json
 from DataBaseSchemaSync.util.configer import Configer
+import sys
 
 
 class DataBaseSchemaSyncer(object):
-    def __init__(self):
+    def __init__(self, conf_path=None):
         try:
-            configure = Configer()
+            configure = Configer(conf_path)
         except IOError:
             sys.stderr.write('file not exist')
             sys.exit(1)
@@ -38,12 +39,15 @@ class DataBaseSchemaSyncer(object):
         self.compare()
 
     def compare(self):
-        cmp = SchemaComparison(self.source, self.target)
-        diffs = cmp.compare(self.source.database, self.target.database)
-        cmp.sync(diffs)
+        mcmp = SchemaComparison(self.source, self.target)
+        diffs = mcmp.compare(self.source.database, self.target.database)
+        mcmp.sync(diffs)
 
 
 if __name__ == "__main__":
-    DataBaseSchemaSyncer()
+    if len(sys.argv) <= 1:
+        DataBaseSchemaSyncer()
+    else:
+        DataBaseSchemaSyncer(sys.argv[1])
 
 
